@@ -18,3 +18,6 @@ source XML data to transform.xml
    
 NHK World XML to XMLTV converter
 *  Path to the XCode CLI file to do the conversion
+
+
+Forked by Dazzhk to make the original suitable for use with python2.7 on libreelec/kodi/tvheadend epg

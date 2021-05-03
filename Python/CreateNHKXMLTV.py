@@ -8,19 +8,39 @@ __maintainer__ = "Squizzy"
 import json
 import datetime
 import xml.etree.ElementTree as xml
-import urllib.request
+
+#import urllib.request
+# Change for use with Python 2.7 on libreelec
+import urllib
 
 # jsonInFile = 'all-json-example.json'
 jsonInFile = 'DownloadedJSON.json'
 # reference for later when pulling off the internet directly:
-JsonInURL = 'https://api.nhk.or.jp/nhkworld/epg/v6/world/all.json?apikey=EJfK8jdS57GqlupFgAfAAwr573q01y6k'
-XMLOutFile = 'ConvertedNHK.xml'
+JsonInURL = 'https://api.nhk.or.jp/nhkworld/epg/v7a/world/all.json?apikey=EJfK8jdS57GqlupFgAfAAwr573q01y6k'
+XMLOutFile = '/storage/ConvertedNHK.xml'
+
+# Dazzhk mod, mod for Python 2.7
+# Import the .json from the URL
+#with urllib.request.urlopen(JsonInURL) as url:
+#    data = json.load(url)
+#with open(jsonInFile, 'w') as jsonfile:
+#    json.dump(data, jsonfile)
+
 
 # Import the .json from the URL
-with urllib.request.urlopen(JsonInURL) as url:
-    data = json.load(url)
-with open(jsonInFile, 'w') as jsonfile:
-    json.dump(data, jsonfile)
+#with urllib2.request.urlopen(JsonInURL) as url:
+#    data = json.load(url)
+#with open(jsonInFile, 'w') as jsonfile:
+#    json.dump(data, jsonfile)
+
+
+# Dazzhk Mod
+url = urllib.urlopen(JsonInURL)
+data = json.load(url)
+
+# Only needed for troubleshooting really. Dazzhk Mod
+#jsonfile = open(jsonInFile, 'w')
+#json.dump(data, jsonfile)
 
 
 # adj_date: convert the unix date with extra 3 "0" to the xmltv date format
@@ -64,7 +84,7 @@ genres = {None: "General",
 
 # Start filling in the table XML tree with content that is useless and might not change
 root = xml.Element('tv')
-root.set('source-data-url', 'https://api.nhk.or.jp/nhkworld/epg/v6/world/all.json?apikey=\
+root.set('source-data-url', 'https://api.nhk.or.jp/nhkworld/epg/v7a/world/all.json?apikey=\
 EJfK8jdS57GqlupFgAfAAwr573q01y6k')
 root.set('source-info-name', 'NHK World EPG Json')
 root.set('source-info-url', 'https://www3.nhk.or.jp/nhkworld/')
@@ -76,9 +96,16 @@ channelDisplayName.text = 'NHK World'
 channelIcon = xml.SubElement(channel, 'icon')
 channelIcon.set('src', 'https://www3.nhk.or.jp/nhkworld/assets/images/icon_nhkworld_tv.png')
 
+# Mod for Python 2.7
 # load the json file from local storage
-with open(jsonInFile, 'r', encoding='utf8') as nhkjson:
-    nhkimported = json.load(nhkjson)
+#with open(jsonInFile, 'r', encoding='utf8') as nhkjson:
+#    nhkimported = json.load(nhkjson)
+
+# Dazzhk Mod
+# load the json file from local storage
+#with open(jsonInFile, 'r', encoding='utf8') as nhkjson:
+#nhkimported = json.load(nhkjson)
+nhkimported = data
 
 # Go through all items, though only interested in the Programmes information here
 for item in nhkimported["channel"]["item"]:
@@ -90,18 +117,18 @@ for item in nhkimported["channel"]["item"]:
     subtitle = item["subtitle"]
     description = item["description"]
     episodeNum = item["airingId"]
-    iconLink = "https://www3.nhk.or.jp" + item["thumbnail"]
+    iconLink = "https://www3.nhk.or.jp" + item["thumbnail_s"]
     genre = item["genre"]["TV"]
     category2 = ""
-    if genre == "":
-        category1 = genres[None]
-    elif isinstance(genre, str):
-        category1 = genres[int(genre)].lower()
-    elif isinstance(genre, list):
-        category1 = genres[int(genre[0])].lower()
-        category2 = genres[int(genre[1])].lower()
-    else:
-        category1 = genres[None]
+#    if genre == "":
+#        category1 = genres[None]
+#    elif isinstance(genre, str):
+#        category1 = genres[int(genre)].lower()
+#    elif isinstance(genre, list):
+#        category1 = genres[int(genre[0])].lower()
+#        category2 = genres[int(genre[1])].lower()
+#    else:
+#        category1 = genres[None]
 
     # construct the program info xml tree
     programme = xml.SubElement(root, 'programme')
@@ -119,7 +146,7 @@ for item in nhkimported["channel"]["item"]:
     progDesc.text = description
     progCat1 = xml.SubElement(programme, 'category')
     progCat1.set('lang', 'en')
-    progCat1.text = category1
+    #progCat1.text = category1
     if category2 != "":
         progCat2 = xml.SubElement(programme, 'category')
         progCat2.set('lang', 'en')
